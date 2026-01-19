@@ -1,0 +1,16 @@
+# Leitura de Documentos
+python-docx
+pypdf
+numpy
+pandas
+matplotlib
+
+# Vector Store
+faiss-cpu
+
+# Bibliotecas de IA
+openai
+anthropic
+
+# Utilidades
+python-dotenv
