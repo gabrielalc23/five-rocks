@@ -1,0 +1,15 @@
+services:
+  summarizer-app:
+    build: 
+      context: .
+    container_name: five-rocks-summarizer
+    volumes:
+      - ./data:/app/data
+      - ./adapters:/app/adapters
+      - ./core:/app/core
+      - ./services:/app/services
+      - ./utils:/app/utils
+      - ./config.py:/app/config.py
+      - ./main.py:/app/main.py
+    environment:
+      - PYTHONUNBUFFERED=1
