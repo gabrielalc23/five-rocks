@@ -123,8 +123,8 @@ async def main() -> None:
     
     # Limita processamento paralelo para evitar sobrecarga de memória/API
     # REDUZIDO para 1 arquivo por vez para evitar rate limits com documentos grandes
-    MAX_PARALLEL_FILES = 1  # Processa 1 arquivo por vez (documentos grandes geram muitos chunks)
-    semaphore = asyncio.Semaphore(MAX_PARALLEL_FILES)
+    MAX_PARALLEL_FILES: int = 1  # Processa 1 arquivo por vez (documentos grandes geram muitos chunks)
+    semaphore: asyncio.Semaphore = asyncio.Semaphore(MAX_PARALLEL_FILES)
     
     async def process_with_limit(file_path: str) -> DocumentResult:
         async with semaphore:

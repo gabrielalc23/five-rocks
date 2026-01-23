@@ -1,155 +1,184 @@
-# 📚 Five Rocks - Bot de Sumarização de Processos Judiciais
+# Five Rocks
 
-Sistema de IA especializado em resumir documentos jurídicos brasileiros (petições, sentenças, acórdãos, despachos) usando OpenAI GPT. Desenvolvido para advogados que precisam processar grandes volumes de documentos processuais de forma eficiente e precisa.
+Sistema de sumarização inteligente de documentos jurídicos brasileiros utilizando IA (OpenAI GPT). Desenvolvido para advogados e profissionais do direito que precisam processar grandes volumes de documentos processuais de forma eficiente.
 
-## 🎯 Características Principais
+## Sumario
 
-- ✅ **Resumos Jurídicos Especializados**: Prompts específicos para cada tipo de documento (petição inicial, sentença, acórdão, despacho)
-- ✅ **Estrutura Padronizada**: Resumos em formato JSON estruturado com metadados jurídicos
-- ✅ **Extração Automática de Metadados**: Identifica número do processo, tribunal, partes, tipo de ação
-- ✅ **Validação de Qualidade**: Validação automática dos resumos gerados
-- ✅ **Tratamento Robusto de Erros**: Detecta e trata PDFs protegidos, corrompidos, DOCX com problemas
-- ✅ **Otimização de Custos**: Usa `gpt-4o-mini` e otimiza tokens para reduzir custos
-- ✅ **Processamento Paralelo**: Processa múltiplos documentos simultaneamente com controle de concorrência
-- ✅ **Suporte a Documentos Grandes**: Processa documentos de 2000+ páginas com estratégia hierárquica
+- [Sobre o Projeto](#sobre-o-projeto)
+- [Funcionalidades](#funcionalidades)
+- [Requisitos](#requisitos)
+- [Instalacao](#instalacao)
+- [Configuracao](#configuracao)
+- [Como Usar](#como-usar)
+- [Estrutura do Projeto](#estrutura-do-projeto)
+- [Arquitetura](#arquitetura)
+- [Formato dos Resumos](#formato-dos-resumos)
+- [Tratamento de Erros](#tratamento-de-erros)
+- [Solucao de Problemas](#solucao-de-problemas)
+- [API Reference](#api-reference)
 
-## 📋 Índice
+---
 
-- [Instalação](#-instalação)
-- [Configuração](#-configuração)
-- [Uso Básico](#-uso-básico)
-- [Estrutura do Projeto](#-estrutura-do-projeto)
-- [Arquitetura](#-arquitetura)
-- [Formato de Resumo](#-formato-de-resumo)
-- [Tratamento de Erros](#-tratamento-de-erros)
-- [Otimizações](#-otimizações)
-- [Troubleshooting](#-troubleshooting)
-- [Documentação Técnica](#-documentação-técnica)
+## Sobre o Projeto
 
-## 🚀 Instalação
+O Five Rocks e um bot especializado em resumir documentos juridicos brasileiros, incluindo:
 
-### Pré-requisitos
+- Peticoes iniciais
+- Sentencas
+- Acordaos
+- Despachos
+- Outros documentos processuais
+
+O sistema utiliza a API da OpenAI com prompts otimizados para o contexto juridico brasileiro, extraindo automaticamente metadados como numero do processo (padrao CNJ), partes envolvidas, tribunal e tipo de acao.
+
+---
+
+## Funcionalidades
+
+### Processamento de Documentos
+- Suporte a arquivos PDF e DOCX
+- Processamento assincrono e paralelo
+- Tratamento de documentos grandes (2000+ paginas)
+- Estrategia hierarquica de sumarizacao para textos extensos
+
+### Inteligencia Juridica
+- Prompts especializados por tipo de documento
+- Extracao automatica de metadados juridicos
+- Identificacao de padroes CNJ para numeros de processo
+- Deteccao automatica de tribunais e comarcas
+
+### Qualidade e Confiabilidade
+- Validacao automatica dos resumos gerados
+- Tratamento robusto de erros (PDFs protegidos, corrompidos, etc.)
+- Retry com backoff exponencial para rate limits
+- Cache em memoria para evitar reprocessamento
+
+### Otimizacao de Custos
+- Uso do modelo `gpt-4o-mini` por padrao
+- Otimizacao de tokens (limpeza de texto)
+- Chunks maiores para reduzir chamadas a API
+- Reducao estimada de 60-70% nos custos
+
+---
+
+## Requisitos
 
 - Python 3.10 ou superior
-- pip (gerenciador de pacotes Python)
 - Chave de API da OpenAI
+- Conexao com a internet
 
-### Passo a Passo
+---
 
-1. **Clone o repositório** (ou navegue até o diretório do projeto):
+## Instalacao
+
+### 1. Clone o repositorio
+
 ```bash
+git clone <url-do-repositorio>
 cd five-rocks
 ```
 
-2. **Crie um ambiente virtual** (recomendado):
+### 2. Crie e ative um ambiente virtual
+
 ```bash
+# Linux/macOS
 python3 -m venv .venv
-source .venv/bin/activate  # Linux/Mac
-# ou
-.venv\Scripts\activate  # Windows
+source .venv/bin/activate
+
+# Windows
+python -m venv .venv
+.venv\Scripts\activate
 ```
 
-3. **Instale as dependências**:
+### 3. Instale as dependencias
+
 ```bash
 pip install -r requirements.txt
 ```
 
-4. **Configure as variáveis de ambiente**:
+### 4. Configure as variaveis de ambiente
+
+Crie um arquivo `.env` na raiz do projeto:
+
 ```bash
-cp .env.example .env  # Se houver arquivo de exemplo
-# Ou crie um arquivo .env manualmente
-```
-
-5. **Adicione sua chave da OpenAI no arquivo `.env`**:
-```env
-OPENAI_API_KEY=sua_chave_aqui
-```
-
-## ⚙️ Configuração
-
-### Variáveis de Ambiente
-
-Crie um arquivo `.env` na raiz do projeto com:
-
-```env
 OPENAI_API_KEY=sua_chave_da_openai_aqui
 ```
 
-### Configuração do Modelo
+---
 
-Por padrão, o sistema usa `gpt-4o-mini` para otimizar custos. Você pode alterar o modelo no código:
+## Configuracao
+
+### Variaveis de Ambiente
+
+| Variavel | Descricao | Obrigatorio |
+|----------|-----------|-------------|
+| `OPENAI_API_KEY` | Chave de API da OpenAI | Sim |
+
+### Arquivo de Configuracao (config.py)
+
+```python
+DATA_DIR = "data"  # Diretorio onde os documentos serao lidos
+MODEL_NAME = "text-davinci-003"  # Modelo padrao (sobrescrito pelo sumarizador)
+```
+
+### Configuracao do Sumarizador
+
+O sumarizador pode ser configurado com os seguintes parametros:
 
 ```python
 from core.openai_summarizer import OpenAISummarizer
 
 summarizer = OpenAISummarizer(
-    model="gpt-4o-mini",  # ou "gpt-4o", "gpt-3.5-turbo", etc.
-    max_retries=3,
-    max_parallel_chunks=5
+    model="gpt-4o-mini",      # Modelo a ser usado
+    max_retries=3,            # Tentativas em caso de falha
+    max_parallel_chunks=5,    # Chunks processados em paralelo
+    validate_resume=True      # Validar resumos gerados
 )
 ```
 
-### Diretório de Dados
+---
 
-Por padrão, o sistema procura documentos na pasta `data/`. Você pode alterar isso em `config.py`:
+## Como Usar
 
-```python
-DATA_DIR = "data"  # Altere para o caminho desejado
-```
+### Uso via Linha de Comando
 
-## 📖 Uso Básico
+1. Coloque seus documentos PDF ou DOCX na pasta `data/`
 
-### Uso Simples
+2. Execute o script principal:
 
-1. **Coloque seus documentos** na pasta `data/`:
-   - Arquivos PDF (`.pdf`)
-   - Arquivos Word (`.docx`)
-
-2. **Execute o script principal**:
 ```bash
-python3 main.py
+python main.py
 ```
 
-3. **Aguarde o processamento**. O sistema irá:
-   - Encontrar todos os arquivos PDF e DOCX
-   - Processar cada um em paralelo (máximo 3 simultâneos)
-   - Gerar resumos estruturados em JSON
-   - Exibir resultados no console
-
-### Exemplo de Saída
+3. Acompanhe o processamento no terminal:
 
 ```
 ============================================================
- 📚 BOT DE SUMARIZAÇÃO DE PROCESSOS (ASYNC)
+ BOT DE SUMARIZACAO DE PROCESSOS (ASYNC)
 ============================================================
 
-🔍 Encontrados: 8 arquivo(s) para processar (4 PDF(s), 4 DOCX(s))
-Processando: 0012197-59.2022.5.15.0135_1grau.pdf
-Processando: 0011037-65.2018.5.15.0126_1grau.pdf
-...
-  [1/8] ✓ 0012197-59.2022.5.15.0135 Leitura Processo.docx
-  [2/8] ✓ 0010466-09.2022.5.15.0012 Leitura Processo.docx
-...
+Encontrados: 5 arquivo(s) para processar (3 PDF(s), 2 DOCX(s))
+
+  [1/5] ✓ processo_001.pdf
+  [2/5] ✓ processo_002.docx
+  [3/5] ✗ processo_003.pdf (PDF protegido por senha)
+  [4/5] ✓ processo_004.pdf
+  [5/5] ✓ processo_005.docx
 
 ============================================================
  RESULTADOS - TODOS OS ARQUIVOS
 ============================================================
 
-📊 Processados: 8 | Sucesso: 8 | Erros: 0 | Taxa: 100.0% | Tempo: 125000ms
+Processados: 5 | Sucesso: 4 | Erros: 1 | Taxa: 80.0%
 
-📄 Resumos gerados:
+Resumos gerados:
 ----------------------------------------
-
-▶ 0012197-59.2022.5.15.0135 Leitura Processo.docx
+▶ processo_001.pdf
   Palavras: 15234 | Tempo: 21792ms
-  {
-    "resumo_executivo": "...",
-    "numero_processo": "0012197-59.2022.5.15.0135",
-    ...
-  }
+  {"resumo_executivo": "...", ...}
 ```
 
-### Uso Programático
+### Uso Programatico
 
 ```python
 import asyncio
@@ -157,390 +186,450 @@ from adapters import PdfAdapter, DocxAdapter
 from core.openai_summarizer import OpenAISummarizer
 from services.document_service import DocumentService
 
-async def process_document():
+async def processar_documento():
     # Inicializa componentes
     summarizer = OpenAISummarizer()
-    adapter = PdfAdapter()  # ou DocxAdapter()
-    
-    # Cria serviço
+    adapter = PdfAdapter()  # ou DocxAdapter() para arquivos .docx
+
+    # Cria servico de documentos
     service = DocumentService(
         adapter=adapter,
         summarizer=summarizer
     )
-    
-    # Processa arquivo
-    result = await service.process_file("data/processo.pdf")
-    
+
+    # Processa um arquivo
+    result = await service.process_file("data/meu_processo.pdf")
+
     if result.is_success:
         print(f"Resumo: {result.summary}")
-        print(f"Palavras: {result.word_count}")
+        print(f"Palavras no documento: {result.word_count}")
+        print(f"Tempo de processamento: {result.processing_time_ms}ms")
     else:
         print(f"Erro: {result.error_message}")
 
 # Executa
-asyncio.run(process_document())
+asyncio.run(processar_documento())
 ```
 
-## 📁 Estrutura do Projeto
+### Processamento em Lote
+
+```python
+from custom_types.batch_result import BatchResult
+
+async def processar_lote():
+    service = DocumentService(adapter=PdfAdapter(), summarizer=OpenAISummarizer())
+
+    arquivos = [
+        "data/processo_001.pdf",
+        "data/processo_002.pdf",
+        "data/processo_003.pdf"
+    ]
+
+    batch: BatchResult = await service.process_batch(
+        file_paths=arquivos,
+        on_progress=lambda r, i, t: print(f"[{i}/{t}] {r.file_name}")
+    )
+
+    print(batch.summary())  # Processados: 3 | Sucesso: 3 | Erros: 0
+```
+
+---
+
+## Estrutura do Projeto
 
 ```
 five-rocks/
-├── adapters/              # Adaptadores para leitura de documentos
-│   ├── base_adapter.py    # Interface base
-│   ├── pdf_adapter.py    # Leitor de PDFs
-│   └── docx_adapter.py   # Leitor de DOCX
 │
-├── core/                  # Núcleo do sistema
-│   ├── base_summarizer.py      # Interface do sumarizador
-│   └── openai_summarizer.py    # Implementação OpenAI
+├── adapters/                    # Adaptadores para leitura de documentos
+│   ├── __init__.py
+│   ├── base_adapter.py          # Interface base para adaptadores
+│   ├── pdf_adapter.py           # Leitor de arquivos PDF
+│   └── docx_adapter.py          # Leitor de arquivos DOCX
 │
-├── services/              # Serviços de negócio
-│   └── document_service.py     # Serviço principal de processamento
+├── builders/                    # Construtores
+│   └── ...
 │
-├── utils/                 # Utilitários
-│   ├── chunck_util.py          # Divisão de texto em chunks
-│   ├── legal_metadata_extractor.py  # Extração de metadados jurídicos
-│   ├── legal_prompt_builder.py      # Construtor de prompts jurídicos
-│   ├── resume_validator.py          # Validador de resumos
-│   └── file_utils.py               # Utilitários de arquivo
+├── constants/                   # Constantes do sistema
+│   └── ...
 │
-├── custom_types/          # Tipos customizados
-│   ├── document_result.py      # Resultado do processamento
-│   └── batch_result.py         # Resultado de lote
+├── core/                        # Nucleo do sistema
+│   ├── __init__.py
+│   ├── base_summarizer.py       # Interface base do sumarizador
+│   └── openai_summarizer.py     # Implementacao com OpenAI
 │
-├── enums/                 # Enumerações
+├── custom_types/                # Tipos customizados
+│   ├── __init__.py
+│   ├── document_result.py       # Resultado do processamento
+│   └── batch_result.py          # Resultado de lote
+│
+├── decorators/                  # Decoradores utilitarios
+│   └── ...
+│
+├── enums/                       # Enumeracoes
 │   └── processing_status_enum.py
 │
-├── data/                  # Diretório de documentos (adicione seus PDFs/DOCX aqui)
+├── info/                        # Informacoes e documentacao
+│   └── ...
 │
-├── main.py                # Script principal
-├── config.py              # Configurações
-├── requirements.txt        # Dependências
-└── README.md              # Este arquivo
+├── modules/                     # Modulos auxiliares
+│   └── ...
+│
+├── services/                    # Servicos de negocio
+│   ├── __init__.py
+│   └── document_service.py      # Servico principal
+│
+├── utils/                       # Utilitarios
+│   ├── __init__.py
+│   ├── chunck_util.py           # Divisao de texto em chunks
+│   ├── file_utils.py            # Utilitarios de arquivo
+│   ├── legal_metadata_extractor.py  # Extrator de metadados
+│   ├── legal_prompt_builder.py      # Construtor de prompts
+│   └── resume_validator.py          # Validador de resumos
+│
+├── data/                        # Diretorio para documentos (gitignore)
+│
+├── main.py                      # Ponto de entrada principal
+├── config.py                    # Configuracoes do sistema
+├── requirements.txt             # Dependencias Python
+├── .env                         # Variaveis de ambiente (gitignore)
+├── .gitignore                   # Arquivos ignorados pelo Git
+└── README.md                    # Este arquivo
 ```
 
-## 🏗️ Arquitetura
+---
+
+## Arquitetura
 
 ### Fluxo de Processamento
 
 ```
-1. Leitura do Documento
-   ├── PDF → PdfAdapter
-   └── DOCX → DocxAdapter
-   
-2. Validação do Texto
-   ├── Tamanho mínimo
-   └── Conteúdo válido
-   
-3. Extração de Metadados
-   ├── Número do processo
-   ├── Tribunal/Comarca
-   ├── Partes
-   ├── Tipo de ação
-   └── Tipo de documento
-   
-4. Construção do Prompt
-   ├── Prompt base jurídico
-   ├── Prompt específico por tipo
-   └── Validação de metadados
-   
-5. Otimização do Texto
-   ├── Remove espaços duplos
-   └── Remove quebras desnecessárias
-   
-6. Divisão em Chunks (se necessário)
-   ├── Chunks de 3000 palavras
-   └── Preserva contexto jurídico
-   
-7. Processamento Paralelo
-   ├── Até 5 chunks simultâneos
-   └── Retry com backoff exponencial
-   
-8. Combinação de Resumos
-   ├── Hierárquico se necessário
-   └── Resumo final estruturado
-   
-9. Validação
-   ├── Formato JSON
-   ├── Campos obrigatórios
-   └── Qualidade mínima
-   
-10. Resultado Final
-    └── JSON estruturado com metadados
+┌─────────────────────────────────────────────────────────────────┐
+│                     FLUXO DE PROCESSAMENTO                       │
+└─────────────────────────────────────────────────────────────────┘
+
+   ┌──────────┐     ┌──────────┐     ┌──────────────────┐
+   │   PDF    │────>│ Adapter  │────>│ Texto Extraido   │
+   │   DOCX   │     │          │     │                  │
+   └──────────┘     └──────────┘     └────────┬─────────┘
+                                              │
+                                              v
+                                   ┌──────────────────┐
+                                   │    Validacao     │
+                                   │  (tamanho min.)  │
+                                   └────────┬─────────┘
+                                              │
+                                              v
+                                   ┌──────────────────┐
+                                   │    Extracao de   │
+                                   │    Metadados     │
+                                   └────────┬─────────┘
+                                              │
+                                              v
+                                   ┌──────────────────┐
+                                   │   Construcao do  │
+                                   │     Prompt       │
+                                   └────────┬─────────┘
+                                              │
+                                              v
+                                   ┌──────────────────┐
+                                   │   Divisao em     │
+                                   │    Chunks        │
+                                   └────────┬─────────┘
+                                              │
+                                              v
+                                   ┌──────────────────┐
+                                   │  Processamento   │
+                                   │   Paralelo       │
+                                   │   (OpenAI API)   │
+                                   └────────┬─────────┘
+                                              │
+                                              v
+                                   ┌──────────────────┐
+                                   │   Combinacao de  │
+                                   │    Resumos       │
+                                   └────────┬─────────┘
+                                              │
+                                              v
+                                   ┌──────────────────┐
+                                   │    Validacao     │
+                                   │     Final        │
+                                   └────────┬─────────┘
+                                              │
+                                              v
+                                   ┌──────────────────┐
+                                   │  JSON Estruturado│
+                                   │   com Metadados  │
+                                   └──────────────────┘
 ```
 
 ### Componentes Principais
 
-#### `OpenAISummarizer`
-- Gerencia comunicação com API OpenAI
-- Implementa estratégia hierárquica para documentos grandes
-- Processa chunks em paralelo
-- Valida resumos gerados
+#### OpenAISummarizer
+Responsavel pela comunicacao com a API da OpenAI. Implementa:
+- Estrategia hierarquica para documentos grandes
+- Processamento paralelo de chunks
+- Validacao de resumos gerados
+- Retry com backoff exponencial
 
-#### `DocumentService`
-- Orquestra o processamento completo
-- Gerencia cache (em memória)
-- Trata erros e validações
+#### DocumentService
+Orquestra todo o fluxo de processamento:
+- Coordena adapters e sumarizador
+- Gerencia cache em memoria
+- Trata erros e validacoes
 - Retorna resultados estruturados
 
-#### `LegalMetadataExtractor`
-- Extrai metadados jurídicos usando regex
-- Identifica padrões CNJ
-- Detecta tribunais, partes, tipos de ação
+#### LegalMetadataExtractor
+Extrai metadados juridicos do texto usando regex:
+- Numeros de processo (padrao CNJ)
+- Tribunais e comarcas
+- Partes (autor, reu)
+- Tipo de acao e documento
 
-#### `LegalPromptBuilder`
-- Constrói prompts especializados
-- Adapta prompt ao tipo de documento
-- Inclui instruções anti-alucinação
+#### LegalPromptBuilder
+Constroi prompts especializados para cada tipo de documento:
+- Prompts base para contexto juridico
+- Prompts especificos por tipo (peticao, sentenca, etc.)
+- Instrucoes anti-alucinacao
 
-#### `ResumeValidator`
-- Valida formato JSON
-- Verifica campos obrigatórios
-- Detecta informações vagas ou inventadas
+---
 
-## 📄 Formato de Resumo
+## Formato dos Resumos
 
-Os resumos são retornados em formato JSON estruturado:
+Os resumos sao retornados em formato JSON estruturado:
 
 ```json
 {
-  "resumo_executivo": "Resumo geral em 2-3 parágrafos com os pontos principais do documento...",
+  "resumo_executivo": "Resumo geral do documento em 2-3 paragrafos...",
   "numero_processo": "0012197-59.2022.5.15.0135",
-  "tribunal": "TJSP",
+  "tribunal": "TRT 15a Regiao",
   "partes": {
-    "autor": "João Silva",
-    "reu": "Empresa XYZ Ltda",
-    "outras_partes": []
+    "autor": "Joao da Silva",
+    "reu": "Empresa ABC Ltda",
+    "outras_partes": ["Sindicato dos Trabalhadores"]
   },
-  "tipo_acao": "ação de cobrança",
-  "tipo_documento": "sentença",
+  "tipo_acao": "Reclamacao Trabalhista",
+  "tipo_documento": "Sentenca",
   "fatos_relevantes": [
-    "Fato 1 descrito no documento",
-    "Fato 2 descrito no documento"
+    "Autor alega ter sido dispensado sem justa causa",
+    "Periodo de trabalho: 01/2020 a 12/2022"
   ],
-  "fundamentacao": "Fundamentação jurídica resumida...",
-  "decisao": "Julgamento procedente em parte...",
+  "fundamentacao": "Resumo da fundamentacao juridica...",
+  "decisao": "Julgou PROCEDENTE EM PARTE os pedidos...",
   "pedidos": [
-    "Pedido 1",
-    "Pedido 2"
+    "Verbas rescisorias",
+    "Horas extras",
+    "Danos morais"
   ],
-  "observacoes": "Observações relevantes se houver"
+  "observacoes": "Prazo para recurso: 8 dias"
 }
 ```
 
 ### Campos por Tipo de Documento
 
-#### Petição Inicial
-- `partes` (autor, réu)
-- `tipo_acao`
-- `fatos_relevantes`
-- `fundamentacao`
-- `pedidos`
-
-#### Sentença
-- `relatorio` (resumo dos fatos)
-- `fundamentacao`
-- `decisao` (dispositivo - procedente/improcedente)
-- `valor_condenacao` (se houver)
-
-#### Acórdão
-- `relatorio`
-- `votos` (resumo dos votos)
-- `fundamentacao`
-- `decisao`
-- `reforma` (se houve reforma)
-
-#### Despacho
-- `materia_decidida`
-- `fundamentacao`
-- `decisao` (deferido/indeferido)
-- `prazo` (se houver)
-
-## ⚠️ Tratamento de Erros
-
-O sistema trata diversos tipos de erros:
-
-### PDFs
-- ✅ **Protegido por senha**: Detecta e informa claramente
-- ✅ **Corrompido**: Identifica e trata graciosamente
-- ✅ **Apenas imagens**: Detecta quando não há texto extraível
-- ✅ **Qualidade de extração**: Valida se extraiu texto suficiente
-
-### DOCX
-- ✅ **Protegido**: Detecta arquivos protegidos
-- ✅ **Corrompido**: Trata corrupção de arquivo
-- ✅ **Tabelas**: Extrai texto de tabelas (importante em processos)
-- ✅ **Headers/Footers**: Extrai informações de cabeçalhos e rodapés
-
-### Texto Extraído
-- ✅ **Muito curto**: Valida tamanho mínimo (10 palavras)
-- ✅ **Apenas espaços**: Detecta textos inválidos
-- ✅ **Qualidade**: Valida conteúdo real
-
-### API OpenAI
-- ✅ **Rate Limits**: Retry com backoff exponencial
-- ✅ **Timeouts**: Tratamento de timeouts
-- ✅ **Erros de API**: Mensagens de erro claras
-
-## 🚀 Otimizações
-
-### Otimização de Tokens
-
-1. **Limpeza de Texto**: Remove espaços duplos, quebras desnecessárias
-2. **Chunks Maiores**: 3000 palavras por chunk (reduz chamadas)
-3. **Modelo Eficiente**: `gpt-4o-mini` para custos baixos
-4. **Processamento Paralelo**: Até 5 chunks simultâneos
-
-### Performance
-
-1. **Processamento Paralelo**: Até 3 arquivos simultaneamente
-2. **Cache em Memória**: Evita reprocessamento
-3. **Estratégia Hierárquica**: Para documentos muito grandes
-4. **Validação Prévia**: Evita processar textos inválidos
-
-### Economia de Custos
-
-- **Redução de ~80%** no número de chamadas (chunks maiores)
-- **Redução de ~10-15%** em tokens (otimização de texto)
-- **Modelo barato**: `gpt-4o-mini` vs modelos mais caros
-- **Total estimado**: Redução de **60-70%** nos custos
-
-## 🔧 Troubleshooting
-
-### Erro: "API key da OpenAI não encontrada"
-
-**Solução**: Certifique-se de ter criado o arquivo `.env` com:
-```env
-OPENAI_API_KEY=sua_chave_aqui
-```
-
-### Erro: "PDF protegido por senha"
-
-**Causa**: O PDF está protegido e não pode ser lido sem senha.
-
-**Solução**: 
-- Remova a proteção do PDF antes de processar
-- Ou use uma versão sem proteção
-
-### Erro: "Texto extraído muito curto"
-
-**Causa**: O documento pode estar:
-- Corrompido
-- Contendo apenas imagens (sem OCR)
-- Vazio
-
-**Solução**:
-- Verifique se o documento abre corretamente
-- Se for PDF escaneado, use OCR antes
-- Verifique se o documento não está vazio
-
-### Erro: "Resumo não está em formato JSON válido"
-
-**Causa**: A IA pode ter retornado texto em vez de JSON.
-
-**Solução**:
-- O sistema tenta corrigir automaticamente
-- Se persistir, verifique os logs para mais detalhes
-- Considere usar um modelo mais recente (gpt-4o)
-
-### Processamento muito lento
-
-**Possíveis causas**:
-- Muitos arquivos grandes
-- Rate limits da API
-- Conexão lenta
-
-**Soluções**:
-- Reduza `MAX_PARALLEL_FILES` em `main.py`
-- Processe em lotes menores
-- Verifique sua conexão com a API
-
-### Memória insuficiente
-
-**Causa**: Documentos muito grandes carregados em memória.
-
-**Solução**:
-- Processe documentos menores primeiro
-- Considere aumentar memória disponível
-- Processe um arquivo por vez (ajuste `MAX_PARALLEL_FILES = 1`)
-
-## 📚 Documentação Técnica
-
-### Documentos Adicionais
-
-- **[ANALISE_CRITICA.md](ANALISE_CRITICA.md)**: Análise completa dos problemas identificados
-- **[CORRECOES_IMPLEMENTADAS.md](CORRECOES_IMPLEMENTADAS.md)**: Documentação das correções implementadas
-
-### API Reference
-
-#### `OpenAISummarizer`
-
-```python
-summarizer = OpenAISummarizer(
-    model: str = "gpt-4o-mini",
-    api_key: Optional[str] = None,
-    max_retries: int = 3,
-    max_parallel_chunks: int = 5,
-    validate_resume: bool = True
-)
-
-# Método principal
-summary: str = await summarizer.summarize(text: str, prompt: Optional[str] = None)
-```
-
-#### `DocumentService`
-
-```python
-service = DocumentService(
-    summarizer: BaseSummarizer,
-    adapter: Optional[BaseAdapter] = None,
-    enable_cache: bool = True
-)
-
-# Processar um arquivo
-result: DocumentResult = await service.process_file(file_path: str)
-
-# Processar lote
-batch: BatchResult = await service.process_batch(
-    file_paths: List[str],
-    on_progress: Optional[Callable] = None
-)
-```
-
-#### `LegalMetadataExtractor`
-
-```python
-extractor = LegalMetadataExtractor()
-metadata: LegalMetadata = extractor.extract(text: str)
-```
-
-## 🤝 Contribuindo
-
-Contribuições são bem-vindas! Para contribuir:
-
-1. Faça um fork do projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
-3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-4. Push para a branch (`git push origin feature/AmazingFeature`)
-5. Abra um Pull Request
-
-## 📝 Licença
-
-Este projeto é de uso interno. Todos os direitos reservados.
-
-## 👥 Autores
-
-- Desenvolvido para uso em escritórios de advocacia
-- Especializado em processamento de documentos jurídicos brasileiros
-
-## 🙏 Agradecimentos
-
-- OpenAI pela API GPT
-- Comunidade Python pelos pacotes utilizados
-- Advogados que testaram e forneceram feedback
+| Tipo | Campos Especificos |
+|------|-------------------|
+| Peticao Inicial | `partes`, `tipo_acao`, `fatos_relevantes`, `fundamentacao`, `pedidos` |
+| Sentenca | `relatorio`, `fundamentacao`, `decisao`, `valor_condenacao` |
+| Acordao | `relatorio`, `votos`, `fundamentacao`, `decisao`, `reforma` |
+| Despacho | `materia_decidida`, `fundamentacao`, `decisao`, `prazo` |
 
 ---
 
-**⚠️ Importante**: Este sistema é uma ferramenta de apoio. Sempre revise os resumos gerados antes de usar em processos reais. A IA pode cometer erros ou omitir informações importantes.
+## Tratamento de Erros
 
-**📧 Suporte**: Para problemas ou dúvidas, consulte a documentação técnica ou abra uma issue.
+### Erros de Documento
+
+| Tipo | Descricao | Tratamento |
+|------|-----------|------------|
+| PDF protegido | Arquivo com senha | Detecta e informa ao usuario |
+| PDF corrompido | Arquivo danificado | Tratamento gracioso com mensagem clara |
+| PDF so imagem | Sem texto extraivel | Detecta e sugere OCR |
+| DOCX protegido | Arquivo com protecao | Detecta e informa |
+| Texto curto | Menos de 10 palavras | Valida e rejeita |
+
+### Erros de API
+
+| Tipo | Descricao | Tratamento |
+|------|-----------|------------|
+| Rate Limit | Limite de requisicoes | Retry com backoff exponencial |
+| Timeout | Tempo excedido | Retry automatico |
+| Erro de rede | Falha de conexao | Mensagem de erro clara |
+
+---
+
+## Solucao de Problemas
+
+### "API key da OpenAI nao encontrada"
+
+Certifique-se de que o arquivo `.env` existe e contem:
+```
+OPENAI_API_KEY=sk-sua-chave-aqui
+```
+
+### "PDF protegido por senha"
+
+O PDF esta protegido. Opcoes:
+- Remova a protecao do PDF usando ferramentas como Adobe Acrobat ou qpdf
+- Use uma versao sem protecao do documento
+
+### "Texto extraido muito curto"
+
+Possiveis causas:
+- Documento corrompido
+- PDF escaneado sem OCR
+- Documento vazio
+
+Solucoes:
+- Verifique se o documento abre corretamente
+- Para PDFs escaneados, aplique OCR antes (use ferramentas como ocrmypdf)
+
+### "Resumo nao esta em formato JSON valido"
+
+O sistema tenta corrigir automaticamente. Se persistir:
+- Verifique os logs para detalhes
+- Considere usar um modelo mais capaz (gpt-4o)
+
+### Processamento muito lento
+
+Ajuste o paralelismo em `main.py`:
+```python
+MAX_PARALLEL_FILES = 1  # Reduza se houver rate limits
+```
+
+### Memoria insuficiente
+
+Para documentos muito grandes:
+```python
+MAX_PARALLEL_FILES = 1  # Processe um arquivo por vez
+```
+
+---
+
+## API Reference
+
+### OpenAISummarizer
+
+```python
+class OpenAISummarizer:
+    def __init__(
+        self,
+        model: str = "gpt-4o-mini",
+        api_key: Optional[str] = None,
+        max_retries: int = 3,
+        max_parallel_chunks: int = 5,
+        validate_resume: bool = True
+    )
+
+    async def summarize(
+        self,
+        text: str,
+        prompt: Optional[str] = None
+    ) -> str:
+        """
+        Gera um resumo do texto fornecido.
+
+        Args:
+            text: Texto a ser resumido
+            prompt: Prompt customizado (opcional)
+
+        Returns:
+            Resumo em formato JSON string
+        """
+```
+
+### DocumentService
+
+```python
+class DocumentService:
+    def __init__(
+        self,
+        summarizer: BaseSummarizer,
+        adapter: Optional[BaseAdapter] = None,
+        enable_cache: bool = True
+    )
+
+    async def process_file(
+        self,
+        file_path: str
+    ) -> DocumentResult:
+        """
+        Processa um unico arquivo.
+
+        Args:
+            file_path: Caminho para o arquivo PDF ou DOCX
+
+        Returns:
+            DocumentResult com resumo ou erro
+        """
+
+    async def process_batch(
+        self,
+        file_paths: List[str],
+        on_progress: Optional[Callable] = None
+    ) -> BatchResult:
+        """
+        Processa multiplos arquivos.
+
+        Args:
+            file_paths: Lista de caminhos
+            on_progress: Callback para progresso
+
+        Returns:
+            BatchResult com todos os resultados
+        """
+```
+
+### DocumentResult
+
+```python
+@dataclass
+class DocumentResult:
+    file_name: str           # Nome do arquivo
+    is_success: bool         # Se processou com sucesso
+    summary: Optional[str]   # Resumo JSON ou None
+    word_count: int          # Contagem de palavras
+    processing_time_ms: float  # Tempo de processamento
+    error_message: Optional[str]  # Mensagem de erro ou None
+```
+
+### BatchResult
+
+```python
+@dataclass
+class BatchResult:
+    results: List[DocumentResult]
+
+    def summary(self) -> str:
+        """Retorna resumo estatistico do lote"""
+
+    def get_successful(self) -> List[DocumentResult]:
+        """Retorna apenas resultados bem-sucedidos"""
+
+    def get_errors(self) -> List[DocumentResult]:
+        """Retorna apenas resultados com erro"""
+```
+
+---
+
+## Dependencias
+
+- `python-docx` - Leitura de arquivos DOCX
+- `pypdf` - Leitura de arquivos PDF
+- `openai` - API da OpenAI
+- `anthropic` - API da Anthropic (preparado para uso futuro)
+- `python-dotenv` - Gerenciamento de variaveis de ambiente
+- `numpy` - Operacoes numericas
+- `pandas` - Manipulacao de dados
+- `faiss-cpu` - Vector store para busca semantica
+
+---
+
+## Aviso Importante
+
+Este sistema e uma ferramenta de apoio ao trabalho juridico. **Sempre revise os resumos gerados antes de utiliza-los em processos reais.** A inteligencia artificial pode cometer erros ou omitir informacoes importantes.
+
+---
+
+## Licenca
+
+Todos os direitos reservados.

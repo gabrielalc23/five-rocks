@@ -1,9 +1,15 @@
-# Environment
+# ========================
+# Variáveis de Ambiente
+# ========================
 .env
 .env.local
 .env.*.local
+.env.development
+.env.production
 
+# ========================
 # Python
+# ========================
 __pycache__/
 *.py[cod]
 *$py.class
@@ -24,27 +30,79 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
-# Virtual environments
+# ========================
+# Ambientes Virtuais
+# ========================
 .venv/
 venv/
 ENV/
 env/
+.conda/
 
-# IDE
+# ========================
+# IDEs e Editores
+# ========================
 .idea/
 .vscode/
 *.swp
 *.swo
 *~
+*.sublime-workspace
+*.sublime-project
+.spyderproject
+.spyproject
 
-# Testing
+# ========================
+# Testes e Cobertura
+# ========================
 .pytest_cache/
 .coverage
 htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
 
-# FAISS indexes
+# ========================
+# FAISS e Dados
+# ========================
 *.faiss
+data/
 
-# Cache
+# ========================
+# Cache e Logs
+# ========================
 .cache/
+*.log
+logs/
+
+# ========================
+# Sistema Operacional
+# ========================
+.DS_Store
+Thumbs.db
+*.bak
+*.tmp
+*.temp
+
+# ========================
+# Jupyter Notebooks
+# ========================
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# ========================
+# MyPy e Type Checking
+# ========================
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# ========================
+# Claude Code
+# ========================
+.claude/
