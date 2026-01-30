@@ -1,25 +1,10 @@
-"""
-Construtor de prompts jurídicos especializados.
-
-Cria prompts estruturados e específicos para cada tipo de documento jurídico,
-garantindo resumos consistentes e juridicamente corretos.
-"""
 from typing import Optional, Dict
 from utils.legal_metadata_extractor import LegalMetadata
 
 
 class LegalPromptBuilder:
-    """
-    Constrói prompts especializados para resumo de documentos jurídicos.
-    
-    Características:
-    - Prompts específicos por tipo de documento
-    - Estrutura padronizada de resumo
-    - Instruções explícitas para evitar alucinações
-    - Formato JSON estruturado
-    """
-    
-    BASE_SYSTEM_PROMPT = """Você é um assistente jurídico especializado em análise e resumo de documentos processuais brasileiros.
+
+    BASE_SYSTEM_PROMPT: str = """Você é um assistente jurídico especializado em análise e resumo de documentos processuais brasileiros.
 
 REGRAS CRÍTICAS:
 1. NUNCA invente informações que não estão explicitamente no texto fornecido
@@ -52,7 +37,7 @@ Você DEVE responder em JSON válido com a seguinte estrutura:
 IMPORTANTE: Responda APENAS com o JSON, sem texto adicional antes ou depois."""
 
     PROMPTS_BY_DOCUMENT_TYPE: Dict[str, str] = {
-        'petição inicial': """DOCUMENTO: PETIÇÃO INICIAL
+        "petição inicial": """DOCUMENTO: PETIÇÃO INICIAL
 
 Extraia e resuma:
 1. Partes (autor e réu)
@@ -63,8 +48,7 @@ Extraia e resuma:
 6. Documentos anexos mencionados
 
 Foque nos pedidos e na fundamentação, pois são críticos para entender o caso.""",
-
-        'sentença': """DOCUMENTO: SENTENÇA
+        "sentença": """DOCUMENTO: SENTENÇA
 
 Extraia e resuma:
 1. Relatório (resumo dos fatos e procedimento)
@@ -74,8 +58,7 @@ Extraia e resuma:
 5. Custas e honorários
 
 O DISPOSITIVO é a parte mais importante - destaque claramente.""",
-
-        'acórdão': """DOCUMENTO: ACÓRDÃO
+        "acórdão": """DOCUMENTO: ACÓRDÃO
 
 Extraia e resuma:
 1. Relatório (histórico do caso)
@@ -86,8 +69,7 @@ Extraia e resuma:
 6. Se houve provimento ou improvimento do recurso
 
 Destaque se houve divergência entre os votos.""",
-
-        'despacho': """DOCUMENTO: DESPACHO/DECISÃO INTERLOCUTÓRIA
+        "despacho": """DOCUMENTO: DESPACHO/DECISÃO INTERLOCUTÓRIA
 
 Extraia e resuma:
 1. Matéria decidida
@@ -97,8 +79,7 @@ Extraia e resuma:
 5. Intimação de partes se houver
 
 Despachos são decisões intermediárias - foque na decisão específica.""",
-
-        'contestação': """DOCUMENTO: CONTESTAÇÃO
+        "contestação": """DOCUMENTO: CONTESTAÇÃO
 
 Extraia e resuma:
 1. Defesas apresentadas (preliminares e de mérito)
@@ -109,42 +90,33 @@ Extraia e resuma:
 
 Foque nas defesas e na fundamentação contrária aos pedidos do autor.""",
     }
-    
+
     def build_prompt(
-        self, 
+        self,
         document_type: Optional[str] = None,
-        metadata: Optional[LegalMetadata] = None
+        metadata: Optional[LegalMetadata] = None,
     ) -> str:
-        """
-        Constrói prompt especializado baseado no tipo de documento.
-        
-        Args:
-            document_type: Tipo de documento identificado
-            metadata: Metadados já extraídos (para validação)
-            
-        Returns:
-            Prompt completo e especializado
-        """
-        prompt = self.BASE_SYSTEM_PROMPT
-        
+        prompt: str = self.BASE_SYSTEM_PROMPT
+
         # Adiciona instruções específicas do tipo de documento
         if document_type and document_type in self.PROMPTS_BY_DOCUMENT_TYPE:
             prompt += "\n\n" + self.PROMPTS_BY_DOCUMENT_TYPE[document_type]
-        
+
         # Adiciona validação de metadados se disponível
         if metadata:
             validation = "\n\nVALIDAÇÃO:"
             if metadata.process_number:
-                validation += f"\n- Número do processo deve ser: {metadata.process_number}"
+                validation += (
+                    f"\n- Número do processo deve ser: {metadata.process_number}"
+                )
             if metadata.tribunal:
                 validation += f"\n- Tribunal deve ser: {metadata.tribunal}"
             if metadata.partes:
                 validation += f"\n- Partes esperadas: {', '.join(metadata.partes[:3])}"
             validation += "\nSe encontrar informações diferentes no texto, use as do texto (pode haver erro na extração automática)."
             prompt += validation
-        
+
         return prompt
-    
+
     def get_default_prompt(self) -> str:
-        """Retorna prompt padrão para documentos não identificados."""
         return self.BASE_SYSTEM_PROMPT

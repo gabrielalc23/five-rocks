@@ -9,11 +9,13 @@ from dotenv import load_dotenv
 
 import config
 from adapters import DocxAdapter, PdfAdapter, BaseAdapter
+from core.base_summarizer import BaseSummarizer
 from core.openai_summarizer import OpenAISummarizer
+from core.anti_hallucination_summarizer import AntiHallucinationSummarizer
 from custom_types.batch_result import BatchResult
 from custom_types.document_result import DocumentResult
 from services.document_service import DocumentService
-from utils.file_utils import find_files
+from utils.file_utils import find_files, move_file_to_processed
 
 
 def setup_logging() -> None:
@@ -72,20 +74,40 @@ async def main() -> None:
     logger.info(" 📚 BOT DE SUMARIZAÇÃO DE PROCESSOS (ASYNC)")
     logger.info("=" * 60)
 
-    data_path: Path = Path(config.DATA_DIR)
+    # Usa as pastas do projeto Velida 001
+    input_path: Path = Path(config.VELIDA_INPUT_DIR)
+    output_path: Path = Path(config.VELIDA_OUTPUT_DIR)
 
-    if not data_path.exists():
-        logger.error(f"Diretório de dados não encontrado: {config.DATA_DIR}")
-        logger.info(f"\n❌ Erro: Diretório '{config.DATA_DIR}' não existe.")
-        logger.info("   Crie o diretório e adicione os arquivos PDF/DOCX.")
-        return
+    # Cria as pastas automaticamente se não existirem (entrada e saída)
+    # parents=True cria todos os diretórios intermediários necessários
+    # exist_ok=True evita erro se o diretório já existir
+    input_path.mkdir(parents=True, exist_ok=True)
+    output_path.mkdir(parents=True, exist_ok=True)
+    
+    logger.info(f"📁 Pasta de entrada: {config.VELIDA_INPUT_DIR}")
+    logger.info(f"📁 Pasta de concluídos: {config.VELIDA_OUTPUT_DIR}")
 
+    # Escolhe o sumarizador baseado na configuracao
     try:
-        summarizer: OpenAISummarizer = OpenAISummarizer()
+        summarizer: BaseSummarizer
+        if config.PIPELINE_MODE == "anti_hallucination":
+            logger.info("Modo: ANTI-ALUCINACAO (pipeline de 6 camadas)")
+            summarizer = AntiHallucinationSummarizer(
+                model=config.EXTRACTION_MODEL,
+                chunker_max_words=config.CHUNKER_MAX_WORDS,
+                extraction_max_parallel=config.EXTRACTION_MAX_PARALLEL,
+                extraction_temperature=config.EXTRACTION_TEMPERATURE,
+                consolidation_temperature=config.CONSOLIDATION_TEMPERATURE,
+                generation_temperature=config.GENERATION_TEMPERATURE,
+                max_regeneration_attempts=config.MAX_REGENERATION_ATTEMPTS,
+            )
+        else:
+            logger.info("Modo: LEGACY (sumarizacao simples)")
+            summarizer = OpenAISummarizer()
     except ValueError as e:
         logger.error(f"Erro ao inicializar o sumarizador: {e}")
         logger.info(
-            "\n❌ Certifique-se de que a variável de ambiente OPENAI_API_KEY está definida no seu arquivo .env"
+            "\n Certifique-se de que a variavel de ambiente OPENAI_API_KEY esta definida no seu arquivo .env"
         )
         return
 
@@ -94,9 +116,10 @@ async def main() -> None:
         ".docx": DocxAdapter(),
     }
 
+    # Busca arquivos na pasta de entrada (A Fazer)
     all_files: List[str] = []
     for ext in adapters.keys():
-        all_files.extend(find_files(config.DATA_DIR, ext))
+        all_files.extend(find_files(config.VELIDA_INPUT_DIR, ext))
 
     total_files: int = len(all_files)
 
@@ -105,16 +128,43 @@ async def main() -> None:
     )
 
     if total_files == 0:
-        logger.info(f"\n⚠️  Nenhum arquivo encontrado em '{config.DATA_DIR}'")
+        logger.info(f"\n⚠️  Nenhum arquivo encontrado em '{config.VELIDA_INPUT_DIR}'")
+        logger.info("   Adicione arquivos PDF ou DOCX na pasta 'A Fazer' para processamento.")
         return
 
     async def process_file_with_correct_adapter(file_path: str, p_bar: dict) -> DocumentResult:
+        """
+        Processa um arquivo com o adaptador correto e move para a pasta de concluídos se bem-sucedido.
+        
+        Args:
+            file_path: Caminho do arquivo a ser processado
+            p_bar: Dicionário com informações de progresso (current, total)
+        
+        Returns:
+            DocumentResult com o resultado do processamento
+        """
         ext: str = Path(file_path).suffix
         adapter: BaseAdapter = adapters[ext]
         document_service: DocumentService = DocumentService(
             adapter=adapter, summarizer=summarizer
         )
+        
+        # Processa o arquivo
         result: DocumentResult = await document_service.process_file(file_path)
+        
+        # Se o processamento foi bem-sucedido, move o arquivo para a pasta de concluídos
+        if result.is_success:
+            moved: bool = await asyncio.get_event_loop().run_in_executor(
+                None, 
+                move_file_to_processed, 
+                file_path, 
+                config.VELIDA_OUTPUT_DIR
+            )
+            if moved:
+                logger.info(f"✅ Arquivo movido para '{config.VELIDA_OUTPUT_DIR}': {Path(file_path).name}")
+            else:
+                logger.warning(f"⚠️  Não foi possível mover o arquivo: {Path(file_path).name}")
+        
         p_bar["current"] += 1
         print_progress(result, p_bar["current"], p_bar["total"])
         return result
